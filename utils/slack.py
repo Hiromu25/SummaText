@@ -46,7 +46,7 @@ class SlackEvent:
                     print(f"Failed to download image: {response.status_code}")
 
                 # 画像から文字列を抽出
-                text = pytesseract.image_to_string(img, lang="jpn")
+                text = pytesseract.image_to_string(img, lang="jpn+eng")
 
                 # テキストからキーワードを抽出
                 keywords = extract_keywords_with_gpt3(text)
