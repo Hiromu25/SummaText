@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "summarize-app"
+version = "0.1.0"
+description = ""
+authors = ["2525 <hi5ro20mu1999@gmail.com>"]
+readme = "README.md"
+packages = [{include = "summarize_app"}]
+
+[tool.poetry.dependencies]
+python = "~3.10"
+newspaper3k = "^0.2.8"
+openai = "^0.27.8"
+python-dotenv = "^1.0.0"
+slack-bolt = "^1.18.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
