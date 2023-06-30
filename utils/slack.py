@@ -1,11 +1,8 @@
-from io import BytesIO
 import re
 import requests
-from PIL import Image
-from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from core.slack import app
-from core.env import SLACK_BOT_TOKEN, SLACK_BOT_ID
+from core.env import SLACK_BOT_TOKEN
 from utils.article import get_article_content
 from utils.chat_gpt import summarize_and_recommend_with_gpt3, extract_keywords_with_gpt3
 from core.gcp import extract_text_from_image
@@ -13,7 +10,7 @@ from core.gcp import extract_text_from_image
 
 class SlackEvent:
     def __init__(self) -> None:
-        self.client = WebClient(token=SLACK_BOT_TOKEN)
+        self.client = app.client
         self.regist_handler()
 
     def regist_handler(self):
@@ -22,7 +19,9 @@ class SlackEvent:
     # メッセージイベントをリッスンします
     def handle_message(self, event):
         # メッセージが自身から送信されたものであるかを確認
-        if event.get("user") == SLACK_BOT_ID:
+        auth_test_response = self.client.auth_test()
+        bot_id = auth_test_response["user_id"]
+        if event.get("user") == bot_id:
             return  # 自身からのメッセージは無視する
 
         # URLの正規表現パターン
@@ -34,10 +33,10 @@ class SlackEvent:
         # スレッドのタイムスタンプを取得
         thread_ts = event.get('thread_ts', event['ts'])
         try:
-        # メッセージがfile_shareイベントであるかを確認
+            # メッセージがfile_shareイベントであるかを確認
             if message_type == "file_share":
                 # 自身がメンションされていない場合は処理をスキップ
-                if SLACK_BOT_ID not in event["text"]:
+                if f"<@{bot_id}>" not in event["text"]:
                     return
 
                 # ファイルの情報を取得
@@ -70,7 +69,7 @@ class SlackEvent:
                 text = event["text"]
 
                 # 自身がメンションされていない場合は処理をスキップ
-                if SLACK_BOT_ID not in text:
+                if f"<@{bot_id}>" not in text:
                     return
 
                 # テキストからURLを抽出
