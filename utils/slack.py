@@ -18,6 +18,7 @@ class SlackEvent:
 
     # メッセージイベントをリッスンします
     def handle_message(self, event):
+        print(event)
         # メッセージが自身から送信されたものであるかを確認
         auth_test_response = self.client.auth_test()
         bot_id = auth_test_response["user_id"]
@@ -66,7 +67,11 @@ class SlackEvent:
                     # 要約をユーザーに送信
                     self.client.chat_postMessage(channel=event['channel'], text=f"{keywords}", thread_ts=thread_ts)
             else:
-                text = event["text"]
+                if "text" in event:
+                    text = event["text"]
+                else:
+                    text = ""
+
 
                 # 自身がメンションされていない場合は処理をスキップ
                 if f"<@{bot_id}>" not in text:

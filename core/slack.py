@@ -19,7 +19,7 @@ class FirestoreInstallationStore(InstallationStore):
     def save(self, installation):
         self.db.collection('installations').document(installation.to_bot().bot_token).set(installation.to_dict())
 
-    def find_installation(self, *, enterprise_id=None, team_id=None, is_enterprise_install=None):
+    def find_installation(self, *, enterprise_id=None, team_id=None, user_id=None, is_enterprise_install=None):
         query = self.db.collection('installations').where('enterprise_id', '==', enterprise_id).where('team_id', '==', team_id).limit(1)
         docs = query.stream()
         for doc in docs:
