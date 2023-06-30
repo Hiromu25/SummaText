@@ -2,13 +2,13 @@ from io import BytesIO
 import re
 import requests
 from PIL import Image
-import pytesseract
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from core.slack import app
 from core.env import SLACK_BOT_TOKEN, SLACK_BOT_ID
 from utils.article import get_article_content
 from utils.chat_gpt import summarize_and_recommend_with_gpt3, extract_keywords_with_gpt3
+from core.gcp import extract_text_from_image
 
 
 class SlackEvent:
@@ -55,15 +55,14 @@ class SlackEvent:
                     # 画像をダウンロード
                     response = requests.get(url, headers=headers)
                     if response.status_code == 200:
-                        img = Image.open(BytesIO(response.content))
+                        content = response.content
                     else:
                         print(f"Failed to download image: {response.status_code}")
 
-                    # 画像から文字列を抽出
-                    text = pytesseract.image_to_string(img, lang="jpn+eng")
+                    texts = extract_text_from_image(content)
 
                     # テキストからキーワードを抽出
-                    keywords = extract_keywords_with_gpt3(text)
+                    keywords = extract_keywords_with_gpt3(texts)
 
                     # 要約をユーザーに送信
                     self.client.chat_postMessage(channel=event['channel'], text=f"{keywords}", thread_ts=thread_ts)
