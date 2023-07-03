@@ -30,7 +30,8 @@ class SlackEvent:
         installation = FirestoreInstallationStore(self.db).find_installation(team_id=team_id)
         client = WebClient(token=installation.bot_token)
         bot_id = installation.bot_user_id
-        if event.get("user") == bot_id:
+        user_id = event.get('user')
+        if user_id == bot_id:
             return
 
         URL_PATTERN = r"https?://[\w/:%#\$&\?\(\)~\.=\+\-]+"
@@ -58,9 +59,9 @@ class SlackEvent:
                     # Save to Firestore
                     doc_ref = self.db.collection('slack_events').document()
                     doc_ref.set({
-                        'workspace_id': event['team'],
+                        'workspace_id': team_id,
                         'channel_id': event['channel'],
-                        'user_id': event['user'],
+                        'user_id': user_id,
                         'timestamp': event['ts'],
                         'image_url': url,
                         'image_text': texts,
@@ -88,9 +89,9 @@ class SlackEvent:
                 # Save to Firestore
                 doc_ref = self.db.collection('slack_events').document()
                 doc_ref.set({
-                    'workspace_id': event['team'],
+                    'workspace_id': team_id,
                     'channel_id': event['channel'],
-                    'user_id': event['user'],
+                    'user_id': user_id,
                     'timestamp': event['ts'],
                     'article_url': url,
                     'article_text': article_content,
