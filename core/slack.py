@@ -1,3 +1,4 @@
+from typing import Awaitable, Callable
 from core.env import SLACK_CLIENT_SECRET, SLACK_CLIENT_ID, SLACK_SIGNING_SECRET
 from slack_bolt import App
 from slack_sdk.oauth.installation_store import InstallationStore, Installation
@@ -6,6 +7,20 @@ from slack_sdk.oauth.state_store import FileOAuthStateStore
 from core.gcp import db
 
 from slack_sdk.oauth.installation_store import InstallationStore, Bot, Installation
+
+from slack_bolt import BoltContext
+from slack_bolt.middleware.middleware import Middleware
+from slack_bolt.request import BoltRequest
+from slack_bolt.response import BoltResponse
+
+class IgnoreRetryMiddleware(Middleware):
+    def process(self, req: BoltRequest, resp: BoltResponse, next: Callable[..., Awaitable[None]]):
+        if 'x-slack-retry-num' in req.headers:
+            # If the 'x-slack-retry-num' header is present, ignore the request
+            return
+        else:
+            # Otherwise, continue processing the request
+            next()
 
 class FirestoreInstallation(Installation):
     def __init__(self,bot_user_id=None, user_id=None, bot_token=None, enterprise_id=None, team_id=None, is_enterprise_install=False):
@@ -40,5 +55,5 @@ oauth_settings = OAuthSettings(
 
 app = App(
     signing_secret=SLACK_SIGNING_SECRET,
-    oauth_settings=oauth_settings
+    oauth_settings=oauth_settings,
 )
