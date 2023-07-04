@@ -35,7 +35,6 @@ class SlackEvent:
 
     def handle_message(self, event, context: BoltContext):
         try:
-            print(event)
             team_id = context["team_id"]
             if team_id is None:
                 print("The event does not contain a 'team' or 'user_team' key.")
@@ -50,18 +49,24 @@ class SlackEvent:
             if user_id == bot_id:
                 return
 
-            if "text" in event:
-                text = event["text"]
-            else:
-                text = ""
-            # ボットがメンションされていない場合は何もしない
-            if f"<@{bot_id}>" not in text:
-                return
-
             client = WebClient(token=installation.bot_token)
             message_type = event.get("subtype", "")
             thread_ts = event.get("thread_ts", event["ts"])
-            if message_type == "file_share":
+
+            # Check if bot is mentioned in the message
+            is_bot_mentioned = False
+            if "blocks" in event:
+                for block in event["blocks"]:
+                    if block["type"] == "rich_text":
+                        for element in block["elements"]:
+                            if element["type"] == "rich_text_section":
+                                for item in element["elements"]:
+                                    if item["type"] == "user" and item["user_id"] == bot_id:
+                                        is_bot_mentioned = True
+                                        break
+
+            if message_type == "file_share" and is_bot_mentioned:
+
                 # Slackから画像をダウンロード
                 file_info = event["files"][0]
                 content, url = download_image(file_info, installation)
@@ -92,7 +97,12 @@ class SlackEvent:
                 )
                 event_store.save(event)
 
-            else:
+            elif is_bot_mentioned:
+
+                if "text" in event:
+                    text = event["text"]
+                else:
+                    text = ""
                 # slackメッセージからURL文字列を抽出
                 URL_PATTERN = r"https?://[\w/:%#\$&\?\(\)~\.=\+\-]+"
                 urls = re.findall(URL_PATTERN, text)
