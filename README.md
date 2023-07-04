@@ -3,7 +3,8 @@
 ## 事前準備
 
 - poetryのインストール
-- `tesseract-ocr`と`tesseract-ocr-jpn`のインストール
+- Cloud Visionの作成
+- Fire Storeの作成
 - `.env`を`.env.example`を参考に作成
 
 ## 実行方法(ローカル)
